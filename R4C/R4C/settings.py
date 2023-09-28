@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'customers',
     'orders',
-    'robots'
+    'robots',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -121,3 +122,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_FROM = 'sanazera2@gmail.com'
+EMAIL_HOST_USER = 'sanazera2@gmail.com'
+EMAIL_HOST_PASSWORD = 'drwkmuihmyjefatu'
+EMAIL_PORT = 587
