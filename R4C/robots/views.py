@@ -3,9 +3,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from robots.forms import RobotForm
 from robots.models import Robot
+from customers.models import Customer
+from orders.models import Order
 from openpyxl import Workbook
 from datetime import datetime, timedelta
 from django.db.models import Count
+from django.core.mail import send_mail
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 @csrf_exempt
@@ -50,3 +55,35 @@ def export_robots_data(request):
 
     wb.save(response)
     return response
+
+
+def robot_exists_email(email, model, version):
+    send_mail('Ваш заказ Робота.',
+              'Доброго времени суток!\n'
+              f'Робот модели {model}, версии {version} в наличии. '
+              f'Пожалуйста, свяжитесь с нами.',
+              'sanazera2@gmail.com',
+              [email],
+              fail_silently=False)
+
+
+@csrf_exempt
+def order_robot(request):
+    if request.method == 'POST':
+        email = request.user['email']
+        serial = request.POST['robot_serial']
+        model = serial[:2]
+        version = serial[3:5]
+
+        '''
+        Проверка на наличие робота в системе
+        Если робот имеется, создается соответсвующий объект модели и отправляется письмо клиенту
+        В противном случае, создается тот же объект модели (Order) но письмо отправляется позже (когда робот появится)
+        '''
+        if Robot.objects.filter(model=model, version=version).exists():
+            customer = Customer.objects.get(email=email)
+            Order.objects.create(customer=customer, robot_serial=serial)
+            robot_exists_email(email, model, version)
+        else:
+            customer = Customer.objects.get(email=email)
+            Order.objects.create(customer=customer, robot_serial=serial)
